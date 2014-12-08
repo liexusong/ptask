@@ -1,0 +1,13 @@
+// $Id$
+// vim:ft=javascript
+
+// If your extension references something external, use ARG_WITH
+// ARG_WITH("ptask", "for ptask support", "no");
+
+// Otherwise, use ARG_ENABLE
+// ARG_ENABLE("ptask", "enable ptask support", "no");
+
+if (PHP_PTASK != "no") {
+	EXTENSION("ptask", "ptask.c");
+}
+
