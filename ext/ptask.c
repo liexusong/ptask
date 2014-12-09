@@ -42,11 +42,11 @@ static int le_ptask;
  * Every user visible function must have an entry in ptask_functions[].
  */
 const zend_function_entry ptask_functions[] = {
-	PHP_FE(ptask_create, NULL)
-	PHP_FE(ptask_run,    NULL)
-	PHP_FE(ptask_yield,  NULL)
-	PHP_FE(ptask_exit,   NULL)
-	{NULL, NULL, NULL}	/* Must be the last line in ptask_functions[] */
+    PHP_FE(ptask_create, NULL)
+    PHP_FE(ptask_run,    NULL)
+    PHP_FE(ptask_yield,  NULL)
+    PHP_FE(ptask_exit,   NULL)
+    {NULL, NULL, NULL}    /* Must be the last line in ptask_functions[] */
 };
 /* }}} */
 
@@ -54,19 +54,19 @@ const zend_function_entry ptask_functions[] = {
  */
 zend_module_entry ptask_module_entry = {
 #if ZEND_MODULE_API_NO >= 20010901
-	STANDARD_MODULE_HEADER,
+    STANDARD_MODULE_HEADER,
 #endif
-	"ptask",
-	ptask_functions,
-	PHP_MINIT(ptask),
-	PHP_MSHUTDOWN(ptask),
-	PHP_RINIT(ptask),		/* Replace with NULL if there's nothing to do at request start */
-	PHP_RSHUTDOWN(ptask),	/* Replace with NULL if there's nothing to do at request end */
-	PHP_MINFO(ptask),
+    "ptask",
+    ptask_functions,
+    PHP_MINIT(ptask),
+    PHP_MSHUTDOWN(ptask),
+    PHP_RINIT(ptask),        /* Replace with NULL if there's nothing to do at request start */
+    PHP_RSHUTDOWN(ptask),    /* Replace with NULL if there's nothing to do at request end */
+    PHP_MINFO(ptask),
 #if ZEND_MODULE_API_NO >= 20010901
-	"0.1", /* Replace with version number for your extension */
+    "0.1", /* Replace with version number for your extension */
 #endif
-	STANDARD_MODULE_PROPERTIES
+    STANDARD_MODULE_PROPERTIES
 };
 /* }}} */
 
@@ -89,8 +89,8 @@ PHP_INI_END()
 /* Uncomment this function if you have INI entries
 static void php_ptask_init_globals(zend_ptask_globals *ptask_globals)
 {
-	ptask_globals->global_value = 0;
-	ptask_globals->global_string = NULL;
+    ptask_globals->global_value = 0;
+    ptask_globals->global_string = NULL;
 }
 */
 /* }}} */
@@ -99,10 +99,10 @@ static void php_ptask_init_globals(zend_ptask_globals *ptask_globals)
  */
 PHP_MINIT_FUNCTION(ptask)
 {
-	/* If you have INI entries, uncomment these lines 
-	REGISTER_INI_ENTRIES();
-	*/
-	return SUCCESS;
+    /* If you have INI entries, uncomment these lines 
+    REGISTER_INI_ENTRIES();
+    */
+    return SUCCESS;
 }
 /* }}} */
 
@@ -110,10 +110,10 @@ PHP_MINIT_FUNCTION(ptask)
  */
 PHP_MSHUTDOWN_FUNCTION(ptask)
 {
-	/* uncomment this line if you have INI entries
-	UNREGISTER_INI_ENTRIES();
-	*/
-	return SUCCESS;
+    /* uncomment this line if you have INI entries
+    UNREGISTER_INI_ENTRIES();
+    */
+    return SUCCESS;
 }
 /* }}} */
 
@@ -122,7 +122,7 @@ PHP_MSHUTDOWN_FUNCTION(ptask)
  */
 PHP_RINIT_FUNCTION(ptask)
 {
-	return SUCCESS;
+    return SUCCESS;
 }
 /* }}} */
 
@@ -131,7 +131,7 @@ PHP_RINIT_FUNCTION(ptask)
  */
 PHP_RSHUTDOWN_FUNCTION(ptask)
 {
-	return SUCCESS;
+    return SUCCESS;
 }
 /* }}} */
 
@@ -139,20 +139,20 @@ PHP_RSHUTDOWN_FUNCTION(ptask)
  */
 PHP_MINFO_FUNCTION(ptask)
 {
-	php_info_print_table_start();
-	php_info_print_table_header(2, "ptask support", "enabled");
-	php_info_print_table_end();
+    php_info_print_table_start();
+    php_info_print_table_header(2, "ptask support", "enabled");
+    php_info_print_table_end();
 
-	/* Remove comments if you have entries in php.ini
-	DISPLAY_INI_ENTRIES();
-	*/
+    /* Remove comments if you have entries in php.ini
+    DISPLAY_INI_ENTRIES();
+    */
 }
 /* }}} */
 
 
 struct ptask_ctx {
-	char *func;
-	zval *arg;
+    char *func;
+    zval *arg;
 };
 
 void ptask_thread_fn(void *arg)
@@ -169,9 +169,9 @@ void ptask_thread_fn(void *arg)
         &retval, 1, params TSRMLS_CC);
 
     /* free all memory */
-	Z_DELREF_PP(&(ctx->arg));
+    Z_DELREF_PP(&(ctx->arg));
     if (Z_REFCOUNT_PP(&(ctx->arg)) == 0) {
-    	zval_dtor(ctx->arg);
+        zval_dtor(ctx->arg);
     }
     efree(ctx->func);
     efree(ctx);
@@ -180,61 +180,61 @@ void ptask_thread_fn(void *arg)
 /* {{{ bool ptask_create(string $func, zval $arg) */
 PHP_FUNCTION(ptask_create)
 {
-	char  *fname;
-	int    flen;
-	zval  *arg;
-	struct ptask_ctx *ctx;
+    char  *fname;
+    int    flen;
+    zval  *arg;
+    struct ptask_ctx *ctx;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz",
-	    &fname, &flen, &arg) == FAILURE)
-	{
-		RETURN_FALSE;
-	}
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz",
+        &fname, &flen, &arg) == FAILURE)
+    {
+        RETURN_FALSE;
+    }
 
-	/* create task context */
-	ctx = emalloc(sizeof(struct ptask_ctx));
+    /* create task context */
+    ctx = emalloc(sizeof(struct ptask_ctx));
 
-	/* copy function name */
-	ctx->func = emalloc(flen + 1);
-	memcpy(ctx->func, fname, flen);
-	ctx->func[flen] = '\0';
+    /* copy function name */
+    ctx->func = emalloc(flen + 1);
+    memcpy(ctx->func, fname, flen);
+    ctx->func[flen] = '\0';
 
-	ctx->arg = arg;
+    ctx->arg = arg;
 
-	Z_ADDREF_PP(&arg); /* arg->refcount++ */
+    Z_ADDREF_PP(&arg); /* arg->refcount++ */
 
-	taskcreate(ptask_thread_fn, (void *)ctx, PTASK_STACK_SIZE);
+    taskcreate(ptask_thread_fn, (void *)ctx, PTASK_STACK_SIZE);
 
-	RETURN_TRUE;
+    RETURN_TRUE;
 }
 /* }}} */
 
 /* {{{ */
 PHP_FUNCTION(ptask_yield)
 {
-	taskyield();
+    taskyield();
 }
 /* }}} */
 
 /* {{{ */
 PHP_FUNCTION(ptask_run)
 {
-	taskscheduler();
+    taskscheduler();
 }
 /* }}} */
 
 /* {{{ */
 PHP_FUNCTION(ptask_exit)
 {
-	int val;
+    int val;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &val) == FAILURE) {
-		RETURN_FALSE;
-	}
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &val) == FAILURE) {
+        RETURN_FALSE;
+    }
 
-	taskexit(val);
-	
-	RETURN_TRUE;
+    taskexit(val);
+    
+    RETURN_TRUE; /* never */
 }
 /* }}} */
 
