@@ -169,8 +169,8 @@ void ptask_thread_fn(void *arg)
         &retval, 1, params TSRMLS_CC);
 
     /* free all memory */
-	ctx->arg->refcount--;
-    if (ctx->arg->refcount == 0) {
+	Z_DELREF_PP(&(ctx->arg));
+    if (Z_REFCOUNT_PP(&(ctx->arg)) == 0) {
     	zval_dtor(ctx->arg);
     }
     efree(ctx->func);
@@ -201,7 +201,7 @@ PHP_FUNCTION(ptask_create)
 
 	ctx->arg = arg;
 
-	zval_add_ref(arg); /* arg->refcount++ */
+	Z_ADDREF_PP(&arg); /* arg->refcount++ */
 
 	taskcreate(ptask_thread_fn, (void *)ctx, PTASK_STACK_SIZE);
 
@@ -232,7 +232,9 @@ PHP_FUNCTION(ptask_exit)
 		RETURN_FALSE;
 	}
 
-	taskexit();
+	taskexit(val);
+	
+	RETURN_TRUE;
 }
 /* }}} */
 
