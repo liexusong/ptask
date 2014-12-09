@@ -33,6 +33,8 @@ ZEND_DECLARE_MODULE_GLOBALS(ptask)
 */
 
 #define  PTASK_STACK_SIZE  32768
+#define  PTASK_NET_TCP     TCP
+#define  PTASK_NET_UDP     UDP
 
 /* True global resources - no need for thread safety here */
 static int le_ptask;
@@ -42,10 +44,16 @@ static int le_ptask;
  * Every user visible function must have an entry in ptask_functions[].
  */
 const zend_function_entry ptask_functions[] = {
+    /* Base functions */
     PHP_FE(ptask_create, NULL)
     PHP_FE(ptask_run,    NULL)
     PHP_FE(ptask_yield,  NULL)
     PHP_FE(ptask_exit,   NULL)
+    /* network functions */
+    PHP_FE(ptask_net_listen, NULL)
+    PHP_FE(ptask_net_accept, NULL)
+    PHP_FE(ptask_net_recv,   NULL)
+    PHP_FE(ptask_net_send,   NULL)
     {NULL, NULL, NULL}    /* Must be the last line in ptask_functions[] */
 };
 /* }}} */
@@ -102,6 +110,9 @@ PHP_MINIT_FUNCTION(ptask)
     /* If you have INI entries, uncomment these lines 
     REGISTER_INI_ENTRIES();
     */
+    REGISTER_LONG_CONSTANT("PTASK_NET_TCP", PTASK_NET_TCP, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("PTASK_NET_UDP", PTASK_NET_UDP, CONST_CS | CONST_PERSISTENT);
+
     return SUCCESS;
 }
 /* }}} */
@@ -149,6 +160,9 @@ PHP_MINFO_FUNCTION(ptask)
 }
 /* }}} */
 
+/*
+ * Base functions
+ */
 
 struct ptask_ctx {
     char *func;
@@ -235,6 +249,99 @@ PHP_FUNCTION(ptask_exit)
     taskexit(val);
     
     RETURN_TRUE; /* never */
+}
+/* }}} */
+
+
+/*
+ * Network functions
+ */
+
+/* {{{ long ptask_net_listen(int $tcp, char $host, int $port) */
+PHP_FUNCTION(ptask_net_listen)
+{
+    int istcp = PTASK_NET_TCP;
+    char *host;
+    int hlen;
+    int port;
+    int sock;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lsl",
+        &istcp, &host, &hlen, &port) == FAILURE)
+    {
+        RETURN_FALSE;
+    }
+
+    sock = netannounce(istcp, host, port);
+    if (sock == -1) {
+        RETURN_FALSE;
+    }
+
+    RETURN_LONG(sock);
+}
+/* }}} */
+
+/* {{{ long ptask_net_accept(int $sock) */
+PHP_FUNCTION(ptask_net_accept)
+{
+    int lsock, csock;
+    char ip[16];
+    int port;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &lsock) == FAILURE
+        || lsock < 0)
+    {
+        RETURN_FALSE;
+    }
+
+    csock = netaccept(lsock, ip, &port);
+    if (csock == -1) {
+        RETURN_FALSE;
+    }
+
+    RETURN_LONG(csock);
+}
+/* }}} */
+
+/* {{{ string ptask_net_recv(int $sock, int $size) */
+PHP_FUNCTION(ptask_net_recv)
+{
+    int sock;
+    int size, nbytes;
+    char *buf;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ll",
+        &sock, &size) == FAILURE || sock < 0 || size <= 0)
+    {
+        RETURN_FALSE;
+    }
+
+    buf = emalloc(size + 1);
+
+    nbytes = fdread(sock, buf, size);
+
+    buf[nbytes] = '\0';
+
+    RETURN_STRINGL(buf, nbytes, 0);
+}
+/* }}} */
+
+/* {{{ int ptask_net_send(int $sock, string $buf) */
+PHP_FUNCTION(ptask_net_send)
+{
+    int sock;
+    char *buf;
+    int blen, nbytes;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ls",
+        &sock, &buf, &blen) == FAILURE || sock < 0)
+    {
+        RETURN_FALSE;
+    }
+
+    nbytes = fdwrite(sock, buf, blen);
+
+    RETURN_LONG(nbytes);
 }
 /* }}} */
 

@@ -46,6 +46,10 @@ PHP_FUNCTION(ptask_create);
 PHP_FUNCTION(ptask_run);
 PHP_FUNCTION(ptask_yield);
 PHP_FUNCTION(ptask_exit);
+PHP_FUNCTION(ptask_net_listen);
+PHP_FUNCTION(ptask_net_accept);
+PHP_FUNCTION(ptask_net_recv);
+PHP_FUNCTION(ptask_net_send);
 
 /* 
   	Declare any global variables you may need between the BEGIN
